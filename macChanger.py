@@ -13,6 +13,8 @@
 #check scope of newMac maybe make it global
 #TO-TEST	-apple	-m	
 
+import subprocess as sub
+
 #get old mac before changing
 class MacChanger:
 	import random
@@ -68,14 +70,48 @@ class MacChanger:
 		#check that the mac address given is in the correct format
 		print 'No MAC validation has been done'
 		return newMac
-print 'test'
-if __name__ == "__main__":
-	print 'WELCOME TO MACCHANGER'    
-	#how to find HWaddr with out macchanger
-	#ifconfig eth0 hw ether 01:02:03:04:05:06
-	# TODO Get old mac address..
-	oldMac = '00:00:00:00:00:00'
 
+def getInterfaceMac(interface):
+	p = sub.Popen('ifconfig %s'%(interface), shell=True, stdout=sub.PIPE, stderr=sub.PIPE)
+	stdout = p.communicate()[0]
+	items = stdout.split(' ')
+	
+	interfactMac = False
+	for item in items:		
+		if interfactMac:
+			interfactMac = item
+		if not item.startswith('HWaddr'):
+			continue
+		else:
+			interfactMac = True
+
+def confirmMac():
+	print ''
+
+def printHelp():
+	help.dedent('''\
+	FUNCTIONALITY 
+	-e, --endding    Don't change the vendor bytes.
+	-a                Set random vendor MAC of any kind.
+	-r, --random   Set fully random MAC.  
+	-m, --mac XX:XX:XX:XX:XX:XX     Set the MAC XX:XX:XX:XX:XX:XX
+	-apple,         Set random mac with vender MAC from Apple
+	''')
+	print help
+
+if __name__ == "__main__":
+	print 'WELCOME TO MACCHANGER'   
+	
+	if len(sys.argv) != 2:
+		print 'syntax: ' + sys.argv[0] + " option interface"
+		if sys.argv[1] == '-h':
+			printHelp()
+		exit()
+
+	option = sys.argv[1]
+	interface = sys.argv[2]
+	oldMac = getInterfaceMac(interface)
+	
 	mc = MacChanger()
 	newMac = mc.changeMac('-r', oldMac)
 
@@ -85,4 +121,4 @@ if __name__ == "__main__":
 
 	print 'new' +newMac
 	print 'old' +oldMac
-
+	
